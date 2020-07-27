@@ -3,7 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 
 const int ledPin = 9;
-const int en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
+const int en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout..
 const int i2c_addr = 0x27;
 const int piezoPin = 6;
 int daytimeStart = 730;
