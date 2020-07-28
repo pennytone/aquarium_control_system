@@ -43,6 +43,8 @@ void updateLCD() {
   lcd.print(now.toString(buf1));
   lcd.setCursor(0, 1);
   lcd.print(now.toString(buf2));
+  lcd.setCursor(12, 1);
+  lcd.print(farenheit);
 }
 
 void setup () {
