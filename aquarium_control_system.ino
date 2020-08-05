@@ -16,6 +16,7 @@ int illuminateTime = 4705;
 int dimTime = 6250;
 int pot = A1;
 int pump1 = 3;
+unsigned long int lastIteration = 0;
 
 LiquidCrystal_I2C lcd(i2c_addr, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
@@ -34,20 +35,37 @@ bool checkDaytime() {
   return false;
 }
 
-void updateLCD() {
-  DateTime now = rtc.now();
+void updateLCD(int interval = 1000) {
+  if ((millis() - lastIteration) > interval) {
+    lastIteration = millis();
+    Serial.println("updating the LCD now");
 
-  int farenheit = rtc.getTemperature() * 1.8 + 32; // ds3231 temp units are in celcius by default, convert celcius to Fahrenheit.
-  char buf1[] = "MMM DD YYYY DDD";
-  char buf2[] = "hh:mm:ss AP";
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(now.toString(buf1));
-  lcd.setCursor(0, 1);
-  lcd.print(now.toString(buf2));
-  lcd.setCursor(12, 1);
-  lcd.print(farenheit);
+    DateTime now = rtc.now();
+
+    int farenheit = rtc.getTemperature() * 1.8 + 32; // ds3231 temp units are in celcius by default, convert celcius to Fahrenheit.
+    char buf1[] = "MMM DD YYYY DDD";
+    char buf2[] = "hh:mm:ss AP";
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(now.toString(buf1));
+    lcd.setCursor(0, 1);
+    lcd.print(now.toString(buf2));
+    lcd.setCursor(12, 1);
+    lcd.print(farenheit);
+
+  }
 }
+
+//// trying to create a function that uses millis rather than delay.
+//String updateInterval(String function, int delayTime = 1000) {
+//
+//  int interval = delayTime;
+//
+//  if (interval - millis() > lastInterval) {
+//    lastInterval = millis();
+//    return function;
+//  }
+//}
 
 void setup () {
   Serial.begin(57600);
@@ -111,6 +129,9 @@ void setup () {
     updateLCD();
     analogWrite(ledPin, 0);
   }
+
+  lastIteration = millis();
+
 }
 
 void alarmSound(int x = 890, int y = 400) {
@@ -160,8 +181,8 @@ void motorControl() {
   byte potVal = analogRead(pot);
   potVal = map(potVal, 17, 216, 0, 255);
   analogWrite(pump1, potVal);
-  Serial.print("potVal = ");
-  Serial.println(potVal);
+  //Serial.print("potVal = ");
+  //Serial.println(potVal);
 
 }
 
@@ -198,6 +219,5 @@ void loop () {
     }
   }
 
-  updateLCD();
-  delay(1000);
+  updateLCD(1000);
 }
