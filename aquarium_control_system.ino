@@ -14,6 +14,8 @@ char date[16];
 char illuminate[8];
 int illuminateTime = 4705;
 int dimTime = 6250;
+int pot = A1;
+int pump1 = 3;
 
 LiquidCrystal_I2C lcd(i2c_addr, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
@@ -56,6 +58,8 @@ void setup () {
 
   pinMode(ledPin, OUTPUT);
   pinMode(piezoPin, OUTPUT);
+  pinMode(pot, INPUT_PULLUP);
+  pinMode(pump1, OUTPUT);
 
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -152,7 +156,18 @@ void lightfadeOff() {
   }
 }
 
+void motorControl() {
+  byte potVal = analogRead(pot);
+  potVal = map(potVal, 17, 216, 0, 255);
+  analogWrite(pump1, potVal);
+  Serial.print("potVal = ");
+  Serial.println(potVal);
+
+}
+
 void loop () {
+
+  motorControl();
 
   DateTime now = rtc.now();
 
