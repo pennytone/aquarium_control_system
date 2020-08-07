@@ -1,8 +1,10 @@
-#include "RTClib.h"
 #include <Wire.h>
+#include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
+#include <Adafruit_PWMServoDriver.h>
 
 const int ledPin = 9;
+const int pwmLed = 0;
 const int en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
 const int i2c_addr = 0x27;
 const int piezoPin = 6;
@@ -22,6 +24,8 @@ LiquidCrystal_I2C lcd(i2c_addr, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
 RTC_DS3231 rtc;
 
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 bool checkDaytime() {
@@ -31,7 +35,6 @@ bool checkDaytime() {
   if (nowInteger > daytimeStart && nowInteger < daytimeEnd) {
     return true;
   }
-
   return false;
 }
 
@@ -56,28 +59,19 @@ void updateLCD(int interval = 1000) {
   }
 }
 
-//// trying to create a function that uses millis rather than delay.
-//String updateInterval(String function, int delayTime = 1000) {
-//
-//  int interval = delayTime;
-//
-//  if (interval - millis() > lastInterval) {
-//    lastInterval = millis();
-//    return function;
-//  }
-//}
-
 void setup () {
-  Serial.begin(57600);
-
-  lcd.begin(16, 2);
-  lcd.print("Aquarium control 1.0");
-  delay(1000);
 
   pinMode(ledPin, OUTPUT);
   pinMode(piezoPin, OUTPUT);
   pinMode(pot, INPUT_PULLUP);
   pinMode(pump1, OUTPUT);
+
+  Serial.begin(57600);
+  lcd.begin(16, 2);
+  pwm.begin();
+
+  lcd.print("Aquarium control 1.0");
+  delay(1000);
 
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -88,6 +82,9 @@ void setup () {
     Serial.println("RTC lost power, let's set the time!");
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
+
+  pwm.setOscillatorFrequency(27000000);
+  pwm.setPWMFreq(1000);
 
   for (int t = 0; t < 3; t++) {
     tone(piezoPin, 890);
@@ -110,13 +107,18 @@ void setup () {
     LightOn = true;
     lcd.setBacklight(HIGH);
 
-    for (int x = 0; x < 255; x++) {
-      analogWrite(ledPin, x);
-      int percent = map(x, 0, 255, 0, 100);
-      sprintf(illuminate, "illuminating %d%%", percent);
-      lcd.print(illuminate);
+    // while statement is used to allow the "if (percent != percent)" statement to compare when percentage change occurs then update the LCD
+    int x = 0;
+    while (x < 4096) {
+      pwm.setPWM(pwmLed, 0, x);
+      int percent = map(x, 0, 4096, 0, 100);
+      if (percent != percent) {
+        sprintf(illuminate, "illuminating %d%%", percent);
+        lcd.print(illuminate);
+      }
+      x++;
       lcd.clear();
-      delay(40);
+      delay(3);
     }
 
   } else {
@@ -126,7 +128,7 @@ void setup () {
     LightOn = false;
     lcd.setBacklight(LOW);
     updateLCD();
-    analogWrite(ledPin, 0);
+    pwm.setPWM(pwmLed, 0, 4096);
   }
 
   lastIteration = millis();
