@@ -109,7 +109,6 @@ void setup () {
     delay(2000);
     LightOn = true;
     lcd.setBacklight(HIGH);
-    lcd.print("illuminate");
 
     for (int x = 0; x < 255; x++) {
       analogWrite(ledPin, x);
