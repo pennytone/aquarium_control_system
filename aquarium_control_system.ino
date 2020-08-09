@@ -41,7 +41,7 @@ bool checkDaytime() {
 void updateLCD(int interval = 1000) {
   if ((millis() - lastIteration) > interval) {
     lastIteration = millis();
-    Serial.println("updating the LCD now");
+    //    Serial.println("updating the LCD now");
 
     DateTime now = rtc.now();
 
@@ -84,7 +84,7 @@ void setup () {
   }
 
   pwm.setOscillatorFrequency(27000000);
-  pwm.setPWMFreq(1000);
+  pwm.setPWMFreq(1600);
 
   for (int t = 0; t < 3; t++) {
     tone(piezoPin, 890);
@@ -103,22 +103,25 @@ void setup () {
   if (checkDaytime()) {
     lcd.setCursor(0, 1);
     lcd.print("DAY MODE");
+    Serial.println("DAY MODE");
     delay(2000);
     LightOn = true;
     lcd.setBacklight(HIGH);
 
     // while statement is used to allow the "if (percent != percent)" statement to compare when percentage change occurs then update the LCD
-    int x = 0;
+    uint16_t x = 0;
     while (x < 4096) {
       pwm.setPWM(pwmLed, 0, x);
-      int percent = map(x, 0, 4096, 0, 100);
+      int percent = map(x, 0, 4095, 0, 100);
       if (percent != percent) {
         sprintf(illuminate, "illuminating %d%%", percent);
+        lcd.clear();
+        lcd.setCursor(0, 0);
         lcd.print(illuminate);
       }
-      x++;
-      lcd.clear();
-      delay(3);
+      Serial.print("day mode pwm value = ");
+      Serial.println(x);
+      x += 8;
     }
 
   } else {
@@ -128,7 +131,8 @@ void setup () {
     LightOn = false;
     lcd.setBacklight(LOW);
     updateLCD();
-    pwm.setPWM(pwmLed, 0, 4096);
+    pwm.setPWM(pwmLed, 0, 4095);
+    Serial.println("night mode");
   }
 
   lastIteration = millis();
@@ -146,35 +150,42 @@ void alarmSound(int x = 890, int y = 400) {
 void lightfadeOn() {
 
   char illuminate[8];
-  for (int x = 0; x < 192; x++) { // using 192 as starting point because psu max output is reached at 192 steps
-    if (x >= 5) {
+  uint16_t x = 0;
+  while ( x < 4096) {
+    if (x > 511) {
       lcd.setBacklight(HIGH);
     }
-    analogWrite(ledPin, x);
-    int percent = map(x, 0, 192, 0, 100);
-    sprintf(illuminate, "ILLUMINATE %d", percent);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(illuminate);
-    delay(illuminateTime); // 20 minutes = 1200 seconds / 256 steps = 4.705 * 1000 (milliseconds) = 4705
+    pwm.setPWM(pwmLed, 0, x);
+    int percent = map(x, 0, 4095, 0, 100);
+    if (percent != percent) {
+      sprintf(illuminate, "ILLUMINATING %d%", percent);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(illuminate);
+    }
+    x++;
+    delay(2275); // 30 minutes at 4096 steps / 1800 seconds.
   }
-  analogWrite(ledPin, 255);
 }
 
 void lightfadeOff() {
 
   char dim[8];
-  for (int y = 192; y >= 0; y-- ) { // using 192 as starting point because psu doesnt give enough power to exceed 192 steps
-    analogWrite(ledPin, y);
-    int percent = map(y, 0, 192, 0, 100);
-    sprintf(dim, "DIMMING %d", percent);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(dim);
-    if (y <= 5) {
+  uint16_t x = 4095;
+  while ( x > 0) {
+    if (x > 511) {
       lcd.setBacklight(LOW);
     }
-    delay(dimTime);
+    pwm.setPWM(pwmLed, 0, x);
+    int percent = map(x, 0, 4095, 0, 100);
+    if (percent != percent) {
+      sprintf(dim, "DIMMING %d%", percent);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(dim);
+    }
+    x--;
+    delay(2275); 
   }
 }
 
