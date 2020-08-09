@@ -69,7 +69,8 @@ void setup () {
   Serial.begin(57600);
   lcd.begin(16, 2);
   pwm.begin();
-
+  
+  lcd.setCursor(0, 0);
   lcd.print("Aquarium control 1.0");
   delay(1000);
 
@@ -103,39 +104,39 @@ void setup () {
   if (checkDaytime()) {
     lcd.setCursor(0, 1);
     lcd.print("DAY MODE");
-    Serial.println("DAY MODE");
     delay(2000);
     LightOn = true;
     lcd.setBacklight(HIGH);
 
     // while statement is used to allow the "if (percent != percent)" statement to compare when percentage change occurs then update the LCD
     uint16_t x = 0;
+    uint8_t lastpercent;
     while (x < 4096) {
       pwm.setPWM(pwmLed, 0, x);
-      int percent = map(x, 0, 4095, 0, 100);
-      if (percent != percent) {
+      uint8_t percent = map(x, 0, 4095, 0, 100);
+      if (lastpercent != percent) {
+        //Serial.print("percent value has changed");
         sprintf(illuminate, "illuminating %d%%", percent);
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print(illuminate);
       }
-      Serial.print("day mode pwm value = ");
-      Serial.println(x);
-      x += 8;
+      lastpercent = percent;
+      x++;
+      delay(5);
     }
 
   } else {
     lcd.setCursor(0, 1);
     lcd.print("NIGHT MODE");
-    delay(1000);
+    delay(2000);
     LightOn = false;
     lcd.setBacklight(LOW);
     updateLCD();
     pwm.setPWM(pwmLed, 0, 4095);
-    Serial.println("night mode");
   }
 
-  lastIteration = millis();
+  //lastIteration = millis();
 
 }
 
@@ -147,7 +148,7 @@ void alarmSound(int x = 890, int y = 400) {
   delay(y);
 }
 
-void lightfadeOn() {
+void lightfadeOn(uint16_t y) {
 
   char illuminate[8];
   uint16_t x = 0;
@@ -156,7 +157,7 @@ void lightfadeOn() {
       lcd.setBacklight(HIGH);
     }
     pwm.setPWM(pwmLed, 0, x);
-    int percent = map(x, 0, 4095, 0, 100);
+    uint8_t percent = map(x, 0, 4095, 0, 100);
     if (percent != percent) {
       sprintf(illuminate, "ILLUMINATING %d%", percent);
       lcd.clear();
@@ -164,11 +165,11 @@ void lightfadeOn() {
       lcd.print(illuminate);
     }
     x++;
-    delay(2275); // 30 minutes at 4096 steps / 1800 seconds.
+    delay(y); // 30 minutes at 4096 steps / 1800 seconds.
   }
 }
 
-void lightfadeOff() {
+void lightfadeOff(uint16_t y) {
 
   char dim[8];
   uint16_t x = 4095;
@@ -177,7 +178,7 @@ void lightfadeOff() {
       lcd.setBacklight(LOW);
     }
     pwm.setPWM(pwmLed, 0, x);
-    int percent = map(x, 0, 4095, 0, 100);
+    uint8_t percent = map(x, 0, 4095, 0, 100);
     if (percent != percent) {
       sprintf(dim, "DIMMING %d%", percent);
       lcd.clear();
@@ -185,12 +186,12 @@ void lightfadeOff() {
       lcd.print(dim);
     }
     x--;
-    delay(2275); 
+    delay(y);
   }
 }
 
 void motorControl() {
-  byte potVal = analogRead(pot);
+  uint8_t potVal = analogRead(pot);
   potVal = map(potVal, 17, 216, 0, 255);
   analogWrite(pump1, potVal);
   //Serial.print("potVal = ");
@@ -206,7 +207,7 @@ void loop () {
 
   if (checkDaytime()) {
     if (LightOn == 0) {
-      for (int t = 0; t < 7; t++) {
+      for (uint16_t t = 0; t < 7; t++) {
         alarmSound();
       }
       lcd.clear();
@@ -214,20 +215,19 @@ void loop () {
       lcd.print("ILLUMINATING");
       LightOn = 1;
       //      lcd.setBacklight(HIGH);
-      lightfadeOn();
+      lightfadeOn(2275);
     }
   }
   else {
     if (LightOn > 0) {
-      for (int t = 0; t < 4; t++) {
+      for (uint16_t t = 0; t < 4; t++) {
         alarmSound();
       }
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("DIMMING");
       LightOn = 0;
-      lightfadeOff();
-      //      lcd.setBacklight(LOW);
+      lightfadeOff(2275);
     }
   }
 
