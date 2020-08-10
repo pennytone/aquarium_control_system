@@ -3,7 +3,6 @@
 #include <LiquidCrystal_I2C.h>
 #include <Adafruit_PWMServoDriver.h>
 
-const int ledPin = 9;
 const int pwmLed = 0;
 const int en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
 const int i2c_addr = 0x27;
@@ -38,30 +37,30 @@ bool checkDaytime() {
   return false;
 }
 
-void updateLCD(int interval = 1000) {
+void updateLCD(uint16_t interval = 1000) {
   if ((millis() - lastIteration) > interval) {
     lastIteration = millis();
-    //    Serial.println("updating the LCD now");
 
     DateTime now = rtc.now();
 
-    int farenheit = rtc.getTemperature() * 1.8 + 32; // ds3231 temp units are in celcius by default, convert celcius to Fahrenheit.
+    int farenheit = rtc.getTemperature() * 1.8 + 32;
     char buf1[] = "MMM DD YYYY DDD";
-    char buf2[] = "hh:mm:ss AP";
+    char buf2[] = "hh:mm:ssAP";
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(now.toString(buf1));
     lcd.setCursor(0, 1);
     lcd.print(now.toString(buf2));
-    lcd.setCursor(12, 1);
+    lcd.setCursor(11, 1);
     lcd.print(farenheit);
-
+    lcd.setCursor(13, 1);
+    lcd.print((char)223); //symbol for degrees
+    lcd.print("F");
   }
 }
 
 void setup () {
 
-  pinMode(ledPin, OUTPUT);
   pinMode(piezoPin, OUTPUT);
   pinMode(pot, INPUT_PULLUP);
   pinMode(pump1, OUTPUT);
@@ -69,7 +68,7 @@ void setup () {
   Serial.begin(57600);
   lcd.begin(16, 2);
   pwm.begin();
-  
+
   lcd.setCursor(0, 0);
   lcd.print("Aquarium control 1.0");
   delay(1000);
@@ -108,22 +107,20 @@ void setup () {
     LightOn = true;
     lcd.setBacklight(HIGH);
 
-    // while statement is used to allow the "if (percent != percent)" statement to compare when percentage change occurs then update the LCD
     uint16_t x = 0;
-    uint8_t lastpercent;
+    uint8_t lastPercent;
     while (x < 4096) {
       pwm.setPWM(pwmLed, 0, x);
       uint8_t percent = map(x, 0, 4095, 0, 100);
-      if (lastpercent != percent) {
-        //Serial.print("percent value has changed");
-        sprintf(illuminate, "illuminating %d%%", percent);
-        lcd.clear();
-        lcd.setCursor(0, 0);
+      if (percent != lastPercent) {
+        sprintf(illuminate, "ILLUMINATING %d%%", percent);
+        //lcd.clear();
+        lcd.setCursor(0, 1);
         lcd.print(illuminate);
       }
-      lastpercent = percent;
+      lastPercent = percent;
       x++;
-      delay(5);
+      delay(1);
     }
 
   } else {
