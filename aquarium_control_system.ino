@@ -10,11 +10,7 @@ const int piezoPin = 6;
 int daytimeStart = 730;
 int daytimeEnd = 2000;
 bool LightOn;
-char militarytime[16];
-char date[16];
 char illuminate[8];
-int illuminateTime = 4705;
-int dimTime = 6250;
 int pot = A1;
 int pump1 = 3;
 unsigned long int lastIteration = 0;
@@ -145,18 +141,20 @@ void lightfadeOn(uint16_t y) {
 
   char illuminate[8];
   uint16_t x = 0;
+  uint8_t lastPercent;
   while ( x < 4096) {
     if (x > 511) {
       lcd.setBacklight(HIGH);
     }
     pwm.setPin(pwmLed, x);
     uint8_t percent = map(x, 0, 4095, 0, 100);
-    if (percent != percent) {
+    if (percent != lastPercent) {
       sprintf(illuminate, "ILLUMINATING %d%", percent);
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print(illuminate);
     }
+    lastPercent = percent;
     x++;
     delay(y); // 30 minutes at 4096 steps / 1800 seconds.
   }
@@ -166,18 +164,20 @@ void lightfadeOff(uint16_t y) {
 
   char dim[8];
   uint16_t x = 4095;
+  uint8_t lastPercent;
   while ( x > 0) {
-    if (x > 511) {
+    if (x < 512) {
       lcd.setBacklight(LOW);
     }
     pwm.setPin(pwmLed, x);
     uint8_t percent = map(x, 0, 4095, 0, 100);
-    if (percent != percent) {
+    if (percent != lastPercent) {
       sprintf(dim, "DIMMING %d%", percent);
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print(dim);
     }
+    lastPercent = percent;
     x--;
     delay(y);
   }
