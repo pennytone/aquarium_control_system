@@ -126,6 +126,7 @@ void setup () {
     lcd.setBacklight(LOW);
     updateLCD();
     pwm.setPin(pwmLed, 0);
+    pwm.sleep();
   }
 }
 
@@ -137,17 +138,18 @@ void alarmSound(int x = 890, int y = 400) {
   delay(y);
 }
 
-void lightfadeOn(uint16_t y) {
+void lightfadeOn(uint16_t y, uint16_t maxBrightness = 4095) {
 
   char illuminate[8];
   uint16_t x = 0;
   uint8_t lastPercent;
-  while ( x < 4096) {
+  pwm.wakeup();
+  while ( x < maxBrightness) {
     if (x > 511) {
       lcd.setBacklight(HIGH);
     }
     pwm.setPin(pwmLed, x);
-    uint8_t percent = map(x, 0, 4095, 0, 100);
+    uint8_t percent = map(x, 0, maxBrightness, 0, 100);
     if (percent != lastPercent) {
       sprintf(illuminate, "ILLUMINATING %d%", percent);
       lcd.clear();
@@ -160,17 +162,17 @@ void lightfadeOn(uint16_t y) {
   }
 }
 
-void lightfadeOff(uint16_t y) {
+void lightfadeOff(uint16_t y, uint16_t maxBrightness = 4095) {
 
   char dim[8];
-  uint16_t x = 4095;
+  uint16_t x = maxBrightness;
   uint8_t lastPercent;
   while ( x > 0) {
     if (x < 512) {
       lcd.setBacklight(LOW);
     }
     pwm.setPin(pwmLed, x);
-    uint8_t percent = map(x, 0, 4095, 0, 100);
+    uint8_t percent = map(x, 0, maxBrightness, 0, 100);
     if (percent != lastPercent) {
       sprintf(dim, "DIMMING %d%", percent);
       lcd.clear();
@@ -181,6 +183,7 @@ void lightfadeOff(uint16_t y) {
     x--;
     delay(y);
   }
+  pwm.sleep();
 }
 
 void motorControl() {
@@ -204,9 +207,9 @@ void loop () {
       lcd.setCursor(0, 0);
       lcd.print("ILLUMINATING");
       LightOn = 1;
-      lightfadeOn(2275);
+      lightfadeOn(2275, 3072);
     }
-  }else {
+  } else {
     if (LightOn > 0) {
       for (uint8_t t = 0; t < 4; t++) {
         alarmSound();
@@ -215,7 +218,7 @@ void loop () {
       lcd.setCursor(0, 0);
       lcd.print("DIMMING");
       LightOn = 0;
-      lightfadeOff(2275);
+      lightfadeOff(2275, 3072);
     }
   }
 
