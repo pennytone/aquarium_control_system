@@ -3,16 +3,16 @@
 #include <LiquidCrystal_I2C.h>
 #include <Adafruit_PWMServoDriver.h>
 
-const int pwmLed = 0;
-const int en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
-const int i2c_addr = 0x27;
-const int piezoPin = 6;
-int daytimeStart = 730;
-int daytimeEnd = 2000;
+const uint8_t pwmLed = 0;
+const uint8_t en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
+const uint8_t i2c_addr = 0x27;
+const uint8_t piezoPin = 6;
+uint16_t daytimeStart = 730;
+uint16_t daytimeEnd = 2000;
 bool LightOn;
 char illuminate[8];
-int pot = A1;
-int pump1 = 3;
+uint16_t pot = A1;
+uint16_t pump1 = 3;
 unsigned long int lastIteration = 0;
 
 LiquidCrystal_I2C lcd(i2c_addr, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
@@ -82,7 +82,7 @@ void setup () {
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(1600);
 
-  for (int t = 0; t < 3; t++) {
+  for (uint8_t t = 0; t < 3; t++) {
     tone(piezoPin, 890);
     delay(400);
     noTone(piezoPin);
