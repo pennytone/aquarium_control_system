@@ -54,7 +54,7 @@ void updateLCD(uint16_t interval = 1000) {
     lcd.setCursor(11, 1);
     lcd.print(farenheit);
     lcd.setCursor(13, 1);
-    lcd.print((char)223); //symbol for degrees
+    lcd.print((char)223); //ascii number for degrees symbol
     lcd.print("F");
   }
 }
@@ -110,11 +110,10 @@ void setup () {
     uint16_t x = 0;
     uint8_t lastPercent;
     while (x < 4096) {
-      pwm.setPWM(pwmLed, 0, x);
+      pwm.setPin(pwmLed, x);
       uint8_t percent = map(x, 0, 4095, 0, 100);
       if (percent != lastPercent) {
         sprintf(illuminate, "ILLUMINATING %d%%", percent);
-        //lcd.clear();
         lcd.setCursor(0, 1);
         lcd.print(illuminate);
       }
@@ -130,11 +129,8 @@ void setup () {
     LightOn = false;
     lcd.setBacklight(LOW);
     updateLCD();
-    pwm.setPWM(pwmLed, 0, 4095);
+    pwm.setPin(pwmLed, 0);
   }
-
-  //lastIteration = millis();
-
 }
 
 void alarmSound(int x = 890, int y = 400) {
@@ -153,7 +149,7 @@ void lightfadeOn(uint16_t y) {
     if (x > 511) {
       lcd.setBacklight(HIGH);
     }
-    pwm.setPWM(pwmLed, 0, x);
+    pwm.setPin(pwmLed, x);
     uint8_t percent = map(x, 0, 4095, 0, 100);
     if (percent != percent) {
       sprintf(illuminate, "ILLUMINATING %d%", percent);
@@ -174,7 +170,7 @@ void lightfadeOff(uint16_t y) {
     if (x > 511) {
       lcd.setBacklight(LOW);
     }
-    pwm.setPWM(pwmLed, 0, x);
+    pwm.setPin(pwmLed, x);
     uint8_t percent = map(x, 0, 4095, 0, 100);
     if (percent != percent) {
       sprintf(dim, "DIMMING %d%", percent);
@@ -191,9 +187,6 @@ void motorControl() {
   uint8_t potVal = analogRead(pot);
   potVal = map(potVal, 17, 216, 0, 255);
   analogWrite(pump1, potVal);
-  //Serial.print("potVal = ");
-  //Serial.println(potVal);
-
 }
 
 void loop () {
@@ -204,20 +197,18 @@ void loop () {
 
   if (checkDaytime()) {
     if (LightOn == 0) {
-      for (uint16_t t = 0; t < 7; t++) {
+      for (uint8_t t = 0; t < 7; t++) {
         alarmSound();
       }
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("ILLUMINATING");
       LightOn = 1;
-      //      lcd.setBacklight(HIGH);
       lightfadeOn(2275);
     }
-  }
-  else {
+  }else {
     if (LightOn > 0) {
-      for (uint16_t t = 0; t < 4; t++) {
+      for (uint8_t t = 0; t < 4; t++) {
         alarmSound();
       }
       lcd.clear();
