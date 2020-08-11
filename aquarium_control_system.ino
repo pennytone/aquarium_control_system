@@ -5,17 +5,19 @@
 
 const uint8_t pwmLed = 0;
 const uint8_t en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
-const uint8_t i2c_addr = 0x27;
 const uint8_t piezoPin = 6;
 uint16_t daytimeStart = 730;
 uint16_t daytimeEnd = 2000;
 bool LightOn;
 char illuminate[8];
 uint16_t pot = A1;
-uint16_t pump1 = 3;
+uint8_t pump1 = 5;
+uint8_t speaker = 3;
 unsigned long int lastIteration = 0;
+uint16_t fadeDelay = 500;
+uint16_t maxPWMsteps = 4095;
 
-LiquidCrystal_I2C lcd(i2c_addr, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
+LiquidCrystal_I2C lcd(0x27, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
 RTC_DS3231 rtc;
 
@@ -103,18 +105,18 @@ void setup () {
     LightOn = true;
     lcd.setBacklight(HIGH);
 
-    uint16_t x = 0;
+    uint16_t i = 0;
     uint8_t lastPercent;
-    while (x < 4096) {
-      pwm.setPin(pwmLed, x);
-      uint8_t percent = map(x, 0, 4095, 0, 100);
+    while (i < maxPWMsteps) {
+      pwm.setPin(pwmLed, i);
+      uint8_t percent = map(i, 0, maxPWMsteps, 0, 100);
       if (percent != lastPercent) {
         sprintf(illuminate, "ILLUMINATING %d%%", percent);
         lcd.setCursor(0, 1);
         lcd.print(illuminate);
       }
       lastPercent = percent;
-      x++;
+      i++;
       delay(1);
     }
 
@@ -138,18 +140,18 @@ void alarmSound(int x = 890, int y = 400) {
   delay(y);
 }
 
-void lightfadeOn(uint16_t y, uint16_t maxBrightness = 4095) {
+void lightfadeOn(uint16_t y, uint16_t z = 4095) {
 
   char illuminate[8];
-  uint16_t x = 0;
+  uint16_t i = 0;
   uint8_t lastPercent;
   pwm.wakeup();
-  while ( x < maxBrightness) {
-    if (x > 511) {
+  while ( i < z) {
+    if (i > 511) {
       lcd.setBacklight(HIGH);
     }
-    pwm.setPin(pwmLed, x);
-    uint8_t percent = map(x, 0, maxBrightness, 0, 100);
+    pwm.setPin(pwmLed, i);
+    uint8_t percent = map(i, 0, z, 0, 100);
     if (percent != lastPercent) {
       sprintf(illuminate, "ILLUMINATING %d%", percent);
       lcd.clear();
@@ -157,22 +159,22 @@ void lightfadeOn(uint16_t y, uint16_t maxBrightness = 4095) {
       lcd.print(illuminate);
     }
     lastPercent = percent;
-    x++;
+    i++;
     delay(y); // 30 minutes at 4096 steps / 1800 seconds.
   }
 }
 
-void lightfadeOff(uint16_t y, uint16_t maxBrightness = 4095) {
+void lightfadeOff(uint16_t y, uint16_t z = 4095) {
 
   char dim[8];
-  uint16_t x = maxBrightness;
   uint8_t lastPercent;
-  while ( x > 0) {
-    if (x < 512) {
+  uint16_t i = z;
+  while ( i > 0) {
+    if (i < 512) {
       lcd.setBacklight(LOW);
     }
-    pwm.setPin(pwmLed, x);
-    uint8_t percent = map(x, 0, maxBrightness, 0, 100);
+    pwm.setPin(pwmLed, i);
+    uint8_t percent = map(i, 0, z, 0, 100);
     if (percent != lastPercent) {
       sprintf(dim, "DIMMING %d%", percent);
       lcd.clear();
@@ -180,7 +182,7 @@ void lightfadeOff(uint16_t y, uint16_t maxBrightness = 4095) {
       lcd.print(dim);
     }
     lastPercent = percent;
-    x--;
+    i--;
     delay(y);
   }
   pwm.sleep();
@@ -207,7 +209,7 @@ void loop () {
       lcd.setCursor(0, 0);
       lcd.print("ILLUMINATING");
       LightOn = 1;
-      lightfadeOn(2275, 3072);
+      lightfadeOn(fadeDelay, maxPWMsteps);
     }
   } else {
     if (LightOn > 0) {
@@ -218,7 +220,7 @@ void loop () {
       lcd.setCursor(0, 0);
       lcd.print("DIMMING");
       LightOn = 0;
-      lightfadeOff(2275, 3072);
+      lightfadeOff(fadeDelay, maxPWMsteps);
     }
   }
 
