@@ -12,3 +12,5 @@ I'll add more features as they come to mind. Feel free to add to the list.
 
 ## How to contribute
 Just fork and edit the files 
+
+## Additional info
