@@ -6,15 +6,15 @@
 const uint8_t pwmLed = 0;
 const uint8_t en = 2, rw = 1, rs = 0, d4 = 4, d5 = 5, d6 = 6, d7 = 7, bl = 3; // Define LCD pinout
 const uint8_t piezoPin = 6;
-uint16_t daytimeStart = 730;
-uint16_t daytimeEnd = 2000;
+uint16_t daytimeStart = 700;
+uint16_t daytimeEnd = 1930;
 bool LightOn;
 char illuminate[8];
 uint16_t pot = A1;
 uint8_t pump1 = 5;
 uint8_t speaker = 3;
 unsigned long int lastIteration = 0;
-uint16_t fadeDelay = 500;
+uint16_t fadeDelay = 879; // 4096 * 879 / 60 = 60 minutes ~ one hour
 uint16_t maxPWMsteps = 4095;
 
 LiquidCrystal_I2C lcd(0x27, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
