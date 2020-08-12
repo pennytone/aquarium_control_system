@@ -15,7 +15,7 @@ uint8_t pump1 = 5;
 uint8_t speaker = 3;
 unsigned long int lastIteration = 0;
 uint16_t fadeDelay = 879; // 4096 * 879 / 60 = 60 minutes ~ one hour
-uint16_t maxPWMsteps = 4095;
+uint16_t maxPWMsteps = 2048;
 
 LiquidCrystal_I2C lcd(0x27, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
