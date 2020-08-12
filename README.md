@@ -7,10 +7,11 @@ It will incorportate
 - water change automation
 - water evaporation replenishment
 - IP based system with MQTT triggers
+- Prevent sifoning if pump or power outage occurs with an NC solenoid between the sump pump return pipe and a check valve between the down pipe and sump tank. 
 
 I'll add more features as they come to mind. Feel free to add to the list. 
 
 ## How to contribute
 Just fork and edit the files 
 
-## Additional info
+## Additional info _
