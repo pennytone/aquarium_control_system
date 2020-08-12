@@ -9,3 +9,6 @@ It will incorportate
 - IP based system with MQTT triggers
 
 I'll add more features as they come to mind. Feel free to add to the list. 
+
+## How to contribute
+Just fork and edit the files 
