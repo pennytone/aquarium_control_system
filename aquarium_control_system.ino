@@ -12,10 +12,16 @@ bool LightOn;
 char illuminate[8];
 uint16_t pot = A1;
 uint8_t pump1 = 5;
-uint8_t speaker = 3;
+uint8_t speaker = 6;
 unsigned long int lastIteration = 0;
 uint16_t fadeDelay = 879; // 4096 * 879 / 60 = 60 minutes ~ one hour
-uint16_t maxPWMsteps = 2048;
+uint16_t maxPWMsteps = 768;
+int volatile rotaryEncoder = 2;
+bool rotarySW = 3;
+byte rotaryDT = 2;
+byte rotaryCLK = 4;
+byte volatile counter = 0;
+bool lockMenuPosition = false;
 
 LiquidCrystal_I2C lcd(0x27, en, rw, rs, d4, d5, d6, d7, bl, POSITIVE);
 
@@ -192,6 +198,71 @@ void motorControl() {
   uint8_t potVal = analogRead(pot);
   potVal = map(potVal, 17, 216, 0, 255);
   analogWrite(pump1, potVal);
+}
+
+void menu() {
+  lockMenuPosition = false;
+  switch (counter) {
+    case 1:
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("LED PWM Steps");
+      if (digitalRead(rotarySW == HIGH)) {
+        lockMenuPosition = true;
+        ledPWMsteps;
+      }
+      break;
+    case 2:
+      lcd.print("light/dark delay");
+      break;
+    case 3:
+      lcd.print("Illuminate time");
+      break;
+    case 4:
+      lcd.print("Fade time");
+      break;
+    default:
+
+      break;
+  }
+}
+
+void isr() {
+  static long unsigned lastInterruptTime = 0;
+  unsigned long interruptTime = millis();
+
+  if (interruptTime - lastInterruptTime > 5) {
+    if (digitalRead(rotaryDT) == LOW) {
+      counter = max(counter, 0);
+      counter--;
+    } else {
+      counter = min(counter, 53);
+      counter++;
+    }
+  }
+  interruptTime = lastInterruptTime;
+}
+
+void ledPWMsteps() {
+  //trying to write code that would allow rotary encoder button press, select different fields to edit, the rotary knob would change value then button press again to save
+  while (lockMenuPosition == true) {
+    String menuArray[2] = {"OLD", "NEW"};
+    counter = 0;
+    counter = max(counter, 0);
+    counter = min(counter, 1); // replace wih number of array objects
+
+    uint16_t newPWMsteps; // after changing the newPWMsteps, set the newPWMsteps to be the maxPWMsteps.
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(menuArray[0]);
+    lcd.setCursor(5,0);
+    lcd.print(maxPWMsteps);
+    lcd.setCursor(0, 1);
+    lcd.print(menuArray[1]);
+    lcd.setCursor(5, 1);
+    lcd.print(newPWMsteps);
+
+  }
 }
 
 void loop () {
