@@ -9,8 +9,8 @@ uint8_t speaker = 6;
 const uint8_t pwmLed = 0;
 uint16_t fadeDelay = 879; // 4096 * 879 / 60 = 60 minutes ~ one hour
 uint16_t maxPWMsteps = 768;
-uint16_t daytimeStart = 700;
-uint16_t daytimeEnd = 1930;
+uint16_t daytimeStart = 554;
+uint16_t daytimeEnd = 1753;
 bool LightOn;
 char illuminate[8];
 uint16_t pot = A1;
